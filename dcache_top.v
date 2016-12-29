@@ -119,8 +119,9 @@ assign	cache_dirty  = write_hit;
 
 // tag comparator
 //!!! add you code here!  (hit=...?,  r_hit_data=...?)
-assign	hit = (sram_valid && (sram_cache_tag == p1_tag));
-assign	r_hit_data = sram_cache_data;
+assign	hit = (sram_valid & (sram_tag == p1_tag) ? 1:0 );
+assign	r_hit_data =  (hit == 1'b1)? sram_cache_data : 256'b0;
+
 
 integer  offset;	
 // read data :  256-bit to 32-bit
@@ -128,7 +129,7 @@ always@(p1_offset or r_hit_data) begin
 	//!!! add you code here! (p1_data=...?)
 	offset = p1_offset;
 	offset = offset*8;
- 	p1_data <= r_hit_data[offset + 31 : offset]; 
+ 	p1_data <= r_hit_data[offset +: 31]; 
 end
 
 
@@ -138,12 +139,20 @@ always@(p1_offset or r_hit_data or p1_data_i) begin
 	offset = p1_offset;
 	offset = offset*8;
 	w_hit_data = r_hit_data;
-	w_hit_data[offset + 31 : offset ] = p1_data_i;
+	w_hit_data[offset +: 31  ] = p1_data_i;
 end
 
 
 // controller 
 always@(posedge clk_i or negedge rst_i) begin
+
+	
+	$display("state: %d,\n mem_enable: %d\n, mem_write: %d\n, cache_we: %d\n write_back: %d\n", state, mem_enable,mem_write, cache_we,write_back);
+	$display("p1_stall_o: %d\n",p1_stall_o);
+	$display("(sram_tag = %b == p1_tag = %b)\n" , sram_tag ,p1_tag);
+	$display("p1_addr_i = %b\n" , p1_addr_i);
+	$display("p1_MemRead_i = %b\n" , p1_MemRead_i);
+	$display("p1_MemWrite_i = %b\n" , p1_MemWrite_i);
 	if(~rst_i) begin
 		state      <= STATE_IDLE;
 		mem_enable <= 1'b0;
@@ -172,8 +181,6 @@ always@(posedge clk_i or negedge rst_i) begin
 				else begin					//write allocate: write miss = read miss + write hit; read miss = read miss + read hit
 	                //!!! add you code here!
 	                mem_enable <= 1'b1;
-	                mem_write  <= 1'b0;
-	                write_back <= 1'b0;
 					state <= STATE_READMISS;
 				end
 			end
@@ -181,6 +188,7 @@ always@(posedge clk_i or negedge rst_i) begin
 				if(mem_ack_i) begin			//wait for data memory acknowledge
 	                //!!! add you code here!
 	                cache_we <= 1'b1;
+	                mem_enable <= 1'b0;
 					state <= STATE_READMISSOK;
 				end
 				else begin
@@ -189,14 +197,13 @@ always@(posedge clk_i or negedge rst_i) begin
 			end
 			STATE_READMISSOK: begin			//wait for data memory acknowledge
 	                //!!! add you code here!
-	                mem_enable <= 1'b0;
 	                cache_we <= 1'b0; 
 				state <= STATE_IDLE;
 			end
 			STATE_WRITEBACK: begin
 				if(mem_ack_i) begin			//wait for data memory acknowledge
 	                //!!! add you code here!
-	                mem_enable <= 1'b0;
+	                mem_enable <= 1'b1;
 					mem_write  <= 1'b0;
 					write_back <= 1'b0;
 					state <= STATE_READMISS;

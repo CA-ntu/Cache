@@ -476,7 +476,7 @@ integer counter=0;
 
 always @(posedge clk_i) begin
 
-    if(MemStall && counter!= 10) begin
+    if(MemStall && counter <= 10) begin
         counter = counter + 1;
     end
     else begin
@@ -652,8 +652,13 @@ always @(posedge clk_i) begin
 
         $display( "MUX3_out_WB = %b\n" , MUX3_out_WB);*/
 
+
+
     end
-	
+    /*
+	$display( "ALU_out = %b,\n" , ALU_out);
+    $display( "ALU_out_MEM = %b,\n" , ALU_out_MEM);
+    $display( "EX_MEM_MemWrite = %b\n" , EX_MEM_MemWrite);*/
  end
 
  endmodule

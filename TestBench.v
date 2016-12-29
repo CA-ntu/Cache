@@ -137,13 +137,13 @@ always@(posedge Clk) begin
 	if(CPU.dcache.p1_stall_o && CPU.dcache.state==0) begin
 		if(CPU.dcache.sram_dirty) begin
 			if(CPU.dcache.p1_MemWrite_i) 
-				$fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h (Write Back!)", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
+				$fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h (Write Back!) dirty ", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
 			else if(CPU.dcache.p1_MemRead_i) 
 				$fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h (Write Back!)", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_o);
 		end
 		else begin
 			if(CPU.dcache.p1_MemWrite_i) 
-				$fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
+				$fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h not dirty ", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
 			else if(CPU.dcache.p1_MemRead_i) 
 				$fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_o);
 		end
