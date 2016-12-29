@@ -395,24 +395,46 @@ Shift_Left_2_26to28 Shift_Left_2_26to28(
 
 
 
+/* old 
 
+    convenient for compare
+
+PC PC(
+    .clk_i      (clk_i),
+    .start_i    (start_i),
+    .rst_i      (rst_i),
+    .PCWrite_i  (PCWrite),
+    .pc_i       (PC_in),
+    .pc_o       (inst_addr)
+);
+
+Data_Memory Data_Memory(
+    .clk_i      (clk_i),
+    .rst_i      (rst_i),
+    .Address_i  (ALU_out_MEM),
+    .Writedata_i(Memdata_in),
+    .MemWrite_i (EX_MEM_MemWrite),
+    .MemRead_i  (EX_MEM_MemRead),
+    .Readdata_o (Memdata_out)
+);
+
+*/
 
 
 /* project 2 */
+
+wire            MemStall;  /* new add wire */
 
 PC PC
 (
     .clk_i(clk_i),
     .rst_i(rst_i),
     .start_i(start_i),
-    .stall_i(),
-    .pcEnable_i(),
-    .pc_i(),
-    .pc_o()
+    .stall_i(MemStall),
+    .pcEnable_i(PCWrite),
+    .pc_i(PC_in),
+    .pc_o(inst_addr)
 );
-
-
-
 
 //data cache
 dcache_top dcache
@@ -430,12 +452,12 @@ dcache_top dcache
     .mem_write_o(mem_write_o), 
     
     // to CPU interface 
-    .p1_data_i(), 
-    .p1_addr_i(),   
-    .p1_MemRead_i(), 
-    .p1_MemWrite_i(), 
-    .p1_data_o(), 
-    .p1_stall_o()
+    .p1_data_i(Memdata_in), 
+    .p1_addr_i(ALU_out_MEM),   
+    .p1_MemRead_i(EX_MEM_MemRead), 
+    .p1_MemWrite_i(EX_MEM_MemWrite), 
+    .p1_data_o(Memdata_out), 
+    .p1_stall_o(MemStall)
 );
 
 
@@ -448,182 +470,189 @@ dcache_top dcache
 
 
 
-
+integer counter=0;
 
 
 
 always @(posedge clk_i) begin
 
-	/* IF/ID */
-	if(IF_ID_Write==1) begin
-        IF_ID_inst <= inst;
-        IF_ID_PC_out <= PC_out;
-    end
-    if ((Branch && Eq) || Jump) begin
-        IF_ID_inst <= 32'h00000000;
-        IF_ID_PC_out <= 32'h00000000;
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-        $display( "In jump or branch");
-    end
-    /*
-    $display( "ID_EX_MemRead = %b\n" , ID_EX_MemRead);
-    $display( "RTaddr_EX = %b\n" , RTaddr_EX);
-    $display( "RSaddr = %b\n" , RSaddr);
-    $display( "RTaddr = %b\n" , RTaddr);
-    $display( "PCWrite = %b\n" , PCWrite);
-    $display( "IF_ID_Write = %b\n" , IF_ID_Write);
-    $display( "NOP = %b\n" , NOP);
-    */
-
-    /*$display( "Jump = %b\n" , Jump);
-    $display( "Branch = %b\n" , Branch);
-
-    $display( "IF_ID_inst = %b\n" , IF_ID_inst);
-    $display( "ShiftLeft28 = %b\n" , ShiftLeft28);
-    $display( "MUX1_out = %b\n" , MUX1_out);
-    $display( "jump_addr = %b\n" , jump_addr);*/
-
-
-
-   
-
-    /* ID/EX */
-    if (NOP==0) begin //no need of mux8
-        //WB
-        ID_EX_MemtoReg <= MemtoReg;
-        ID_EX_RegWrite <= RegWrite;
-        //M
-        ID_EX_MemRead <= MemRead; 
-        ID_EX_MemWrite <= MemWrite;
-        //EX
-        ID_EX_ALUSrc <= ALUSrc;
-        ID_EX_ALUOp <= ALUOp;
-        ID_EX_RegDst <= RegDst;
+    if(MemStall && counter!= 10) begin
+        counter = counter + 1;
     end
     else begin
+
+        counter = 0;
+
+    	/* IF/ID */
+    	if(IF_ID_Write==1) begin
+            IF_ID_inst <= inst;
+            IF_ID_PC_out <= PC_out;
+        end
+        if ((Branch && Eq) || Jump) begin
+            IF_ID_inst <= 32'h00000000;
+            IF_ID_PC_out <= 32'h00000000;
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+            $display( "In jump or branch");
+        end
+        /*
+        $display( "ID_EX_MemRead = %b\n" , ID_EX_MemRead);
+        $display( "RTaddr_EX = %b\n" , RTaddr_EX);
+        $display( "RSaddr = %b\n" , RSaddr);
+        $display( "RTaddr = %b\n" , RTaddr);
+        $display( "PCWrite = %b\n" , PCWrite);
+        $display( "IF_ID_Write = %b\n" , IF_ID_Write);
+        $display( "NOP = %b\n" , NOP);
+        */
+
+        /*$display( "Jump = %b\n" , Jump);
+        $display( "Branch = %b\n" , Branch);
+
+        $display( "IF_ID_inst = %b\n" , IF_ID_inst);
+        $display( "ShiftLeft28 = %b\n" , ShiftLeft28);
+        $display( "MUX1_out = %b\n" , MUX1_out);
+        $display( "jump_addr = %b\n" , jump_addr);*/
+
+
+
+       
+
+        /* ID/EX */
+        if (NOP==0) begin //no need of mux8
+            //WB
+            ID_EX_MemtoReg <= MemtoReg;
+            ID_EX_RegWrite <= RegWrite;
+            //M
+            ID_EX_MemRead <= MemRead; 
+            ID_EX_MemWrite <= MemWrite;
+            //EX
+            ID_EX_ALUSrc <= ALUSrc;
+            ID_EX_ALUOp <= ALUOp;
+            ID_EX_RegDst <= RegDst;
+        end
+        else begin
+            //WB
+            ID_EX_MemtoReg <= 0;
+            ID_EX_RegWrite <= 0;
+            //M
+            ID_EX_MemRead <= 0; 
+            ID_EX_MemWrite <= 0;
+            //EX
+            ID_EX_ALUSrc <= 0;
+            ID_EX_ALUOp <= 2'b00;
+            ID_EX_RegDst <= 0;
+        end
+        ID_EX_RSdata <= RSdata;
+        ID_EX_RTdata <= RTdata;
+        ID_EX_Immediate32 <= Immediate32;
+        ID_EX_RSaddr <= RSaddr;
+        ID_EX_RTaddr <= RTaddr;
+        ID_EX_RDaddr <= RDaddr;
+        ID_EX_inst <= IF_ID_inst;
+
+        /* EX/MEM */
         //WB
-        ID_EX_MemtoReg <= 0;
-        ID_EX_RegWrite <= 0;
+        EX_MEM_MemtoReg <= ID_EX_MemtoReg;
+        EX_MEM_RegWrite <= ID_EX_RegWrite;
         //M
-        ID_EX_MemRead <= 0; 
-        ID_EX_MemWrite <= 0;
-        //EX
-        ID_EX_ALUSrc <= 0;
-        ID_EX_ALUOp <= 2'b00;
-        ID_EX_RegDst <= 0;
+        EX_MEM_MemRead <= ID_EX_MemRead; 
+        EX_MEM_MemWrite <= ID_EX_MemWrite;
+        // temp
+        EX_MEM_ALU_out <= ALU_out;
+        EX_MEM_MUX7_out <= MUX7_out;
+        EX_MEM_MUX3_out <= MUX3_out;
+        // register addr
+        EX_MEM_RSaddr <= ID_EX_RSaddr;
+        EX_MEM_RTaddr <= ID_EX_RTaddr;
+        EX_MEM_RDaddr <= ID_EX_RDaddr;
+
+
+        /* MEM/WB */
+        //WB
+        MEM_WB_MemtoReg <= EX_MEM_MemtoReg;
+        MEM_WB_RegWrite <= EX_MEM_RegWrite;
+        // temp
+        MEM_WB_Memdata_out <= Memdata_out;
+        MEM_WB_ALU_out <= ALU_out_MEM;
+        MEM_WB_MUX3_out <= MUX3_out_MEM;
+
+        /*
+
+        $display( "MUX3_out = %b,\n" , MUX3_out);
+
+        $display( "RTaddr_EX = %b,\n" , RTaddr_EX);
+        $display( "RDaddr_EX = %b,\n" , RDaddr_EX);
+
+        $display( "RSaddr = %b,\n" , RSaddr);
+        $display( "RTaddr = %b,\n" , RTaddr);
+
+        $display( "register[RTaddr] = %b,\n" , register[RTaddr]);
+
+        
+
+        $display( "RSdata = %d,\n" , RSdata);
+        $display( "RTdata = %d,\n" , RTdata);
+
+        $display( "ID_EX_RSdata = %d,\n" , ID_EX_RSdata);
+        $display( "ID_EX_RTdata = %d,\n" , ID_EX_RTdata);
+
+        $display( "MUX7_out = %d,\n" , MUX7_out);
+        
+
+        $display( "MUX4_out = %d,\n" , MUX4_out);
+        $display( "MUX6_out = %d,\n" , MUX6_out);
+        $display( "RSdata_EX = %d,\n" , RSdata_EX);
+        $display( "MUX5_out = %d,\n" , MUX5_out);
+        $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
+        $display( "ForwardA = %b,\n" , ForwardA);
+        $display( "ForwardB = %b,\n" , ForwardB);
+
+        
+        $display( "RTaddr_EX = %b,\n" , RTaddr_EX);
+        $display( "RDaddr_EX = %b,\n" , RDaddr_EX);
+        $display( "MUX3_out_MEM = %b,\n" , MUX3_out_MEM);
+        $display( "MUX3_out_WB = %b,\n" , MUX3_out_WB);
+
+
+
+
+
+        $display( "ALU_out = %d,\n" , ALU_out);
+
+        $display( "MUX3_out_MEM = %b,\n" , MUX3_out_MEM);
+        $display( "MEM_WB_MUX3_out = %b,\n" , MEM_WB_MUX3_out);
+
+        $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
+        $display( "MEM_WB_ALU_out = %d,\n" , MEM_WB_ALU_out);
+
+        $display( "MUX3_out_WB = %b,\n" , MUX3_out_WB);
+        $display( "MUX5_out = %d,\n" , MUX5_out);
+
+        $display( "RSdata = %d,\n" , RSdata);
+        $display( "RTdata = %d,\n" , RTdata);
+
+        $display( "ID_EX_RSdata = %d,\n" , ID_EX_RSdata);
+        $display( "ID_EX_RTdata = %d,\n" , ID_EX_RTdata);
+
+        $display( "MUX7_out = %d,\n" , MUX7_out);
+        
+
+        $display( "MUX4_out = %d,\n" , MUX4_out);
+        $display( "MUX6_out = %d,\n" , MUX6_out);
+        $display( "RSdata_EX = %d,\n" , RSdata_EX);
+        $display( "RTdata_EX = %d,\n" , RTdata_EX);
+        $display( "MUX5_out = %d,\n" , MUX5_out);
+        $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
+        $display( "ForwardA = %b,\n" , ForwardA);
+        $display( "ForwardB = %b,\n" , ForwardB);
+
+        $display( "MUX3_out_WB = %b\n" , MUX3_out_WB);*/
+
     end
-    ID_EX_RSdata <= RSdata;
-    ID_EX_RTdata <= RTdata;
-    ID_EX_Immediate32 <= Immediate32;
-    ID_EX_RSaddr <= RSaddr;
-    ID_EX_RTaddr <= RTaddr;
-    ID_EX_RDaddr <= RDaddr;
-    ID_EX_inst <= IF_ID_inst;
-
-    /* EX/MEM */
-    //WB
-    EX_MEM_MemtoReg <= ID_EX_MemtoReg;
-    EX_MEM_RegWrite <= ID_EX_RegWrite;
-    //M
-    EX_MEM_MemRead <= ID_EX_MemRead; 
-    EX_MEM_MemWrite <= ID_EX_MemWrite;
-    // temp
-    EX_MEM_ALU_out <= ALU_out;
-    EX_MEM_MUX7_out <= MUX7_out;
-    EX_MEM_MUX3_out <= MUX3_out;
-    // register addr
-    EX_MEM_RSaddr <= ID_EX_RSaddr;
-    EX_MEM_RTaddr <= ID_EX_RTaddr;
-    EX_MEM_RDaddr <= ID_EX_RDaddr;
-
-
-    /* MEM/WB */
-    //WB
-    MEM_WB_MemtoReg <= EX_MEM_MemtoReg;
-    MEM_WB_RegWrite <= EX_MEM_RegWrite;
-    // temp
-    MEM_WB_Memdata_out <= Memdata_out;
-    MEM_WB_ALU_out <= ALU_out_MEM;
-    MEM_WB_MUX3_out <= MUX3_out_MEM;
-
-    /*
-
-    $display( "MUX3_out = %b,\n" , MUX3_out);
-
-    $display( "RTaddr_EX = %b,\n" , RTaddr_EX);
-    $display( "RDaddr_EX = %b,\n" , RDaddr_EX);
-
-    $display( "RSaddr = %b,\n" , RSaddr);
-    $display( "RTaddr = %b,\n" , RTaddr);
-
-    $display( "register[RTaddr] = %b,\n" , register[RTaddr]);
-
-    
-
-    $display( "RSdata = %d,\n" , RSdata);
-    $display( "RTdata = %d,\n" , RTdata);
-
-    $display( "ID_EX_RSdata = %d,\n" , ID_EX_RSdata);
-    $display( "ID_EX_RTdata = %d,\n" , ID_EX_RTdata);
-
-    $display( "MUX7_out = %d,\n" , MUX7_out);
-    
-
-    $display( "MUX4_out = %d,\n" , MUX4_out);
-    $display( "MUX6_out = %d,\n" , MUX6_out);
-    $display( "RSdata_EX = %d,\n" , RSdata_EX);
-    $display( "MUX5_out = %d,\n" , MUX5_out);
-    $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
-    $display( "ForwardA = %b,\n" , ForwardA);
-    $display( "ForwardB = %b,\n" , ForwardB);
-
-    
-    $display( "RTaddr_EX = %b,\n" , RTaddr_EX);
-    $display( "RDaddr_EX = %b,\n" , RDaddr_EX);
-    $display( "MUX3_out_MEM = %b,\n" , MUX3_out_MEM);
-    $display( "MUX3_out_WB = %b,\n" , MUX3_out_WB);
-
-
-
-
-
-    $display( "ALU_out = %d,\n" , ALU_out);
-
-    $display( "MUX3_out_MEM = %b,\n" , MUX3_out_MEM);
-    $display( "MEM_WB_MUX3_out = %b,\n" , MEM_WB_MUX3_out);
-
-    $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
-    $display( "MEM_WB_ALU_out = %d,\n" , MEM_WB_ALU_out);
-
-    $display( "MUX3_out_WB = %b,\n" , MUX3_out_WB);
-    $display( "MUX5_out = %d,\n" , MUX5_out);
-
-    $display( "RSdata = %d,\n" , RSdata);
-    $display( "RTdata = %d,\n" , RTdata);
-
-    $display( "ID_EX_RSdata = %d,\n" , ID_EX_RSdata);
-    $display( "ID_EX_RTdata = %d,\n" , ID_EX_RTdata);
-
-    $display( "MUX7_out = %d,\n" , MUX7_out);
-    
-
-    $display( "MUX4_out = %d,\n" , MUX4_out);
-    $display( "MUX6_out = %d,\n" , MUX6_out);
-    $display( "RSdata_EX = %d,\n" , RSdata_EX);
-    $display( "RTdata_EX = %d,\n" , RTdata_EX);
-    $display( "MUX5_out = %d,\n" , MUX5_out);
-    $display( "ALU_out_MEM = %d,\n" , ALU_out_MEM);
-    $display( "ForwardA = %b,\n" , ForwardA);
-    $display( "ForwardB = %b,\n" , ForwardB);
-
-    $display( "MUX3_out_WB = %b\n" , MUX3_out_WB);*/
-
-    
 	
  end
 
