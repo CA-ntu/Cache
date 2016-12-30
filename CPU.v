@@ -651,10 +651,7 @@ always @(posedge clk_i) begin
 
 
     end
-    /*
-	$display( "ALU_out = %b,\n" , ALU_out);
-    $display( "ALU_out_MEM = %b,\n" , ALU_out_MEM);
-    $display( "EX_MEM_MemWrite = %b\n" , EX_MEM_MemWrite);*/
+    
  end
 
  endmodule

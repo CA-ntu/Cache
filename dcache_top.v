@@ -120,7 +120,7 @@ assign	cache_dirty  = write_hit;
 // tag comparator
 //!!! add you code here!  (hit=...?,  r_hit_data=...?)
 assign	hit = (sram_valid & (sram_tag == p1_tag) ? 1:0 );
-assign	r_hit_data =  (hit == 1'b1)? sram_cache_data : 256'b0;
+assign	r_hit_data = (hit == 1'b1)? sram_cache_data : 256'b0;
 
 
 integer  offset;	
@@ -147,12 +147,12 @@ end
 always@(posedge clk_i or negedge rst_i) begin
 
 	
-	$display("state: %d,\n mem_enable: %d\n, mem_write: %d\n, cache_we: %d\n write_back: %d\n", state, mem_enable,mem_write, cache_we,write_back);
+	/*$display("state: %d,\n mem_enable: %d\n, mem_write: %d\n, cache_we: %d\n write_back: %d\n", state, mem_enable,mem_write, cache_we,write_back);
 	$display("p1_stall_o: %d\n",p1_stall_o);
 	$display("(sram_tag = %b == p1_tag = %b)\n" , sram_tag ,p1_tag);
 	$display("p1_addr_i = %b\n" , p1_addr_i);
 	$display("p1_MemRead_i = %b\n" , p1_MemRead_i);
-	$display("p1_MemWrite_i = %b\n" , p1_MemWrite_i);
+	$display("p1_MemWrite_i = %b\n" , p1_MemWrite_i);*/
 	if(~rst_i) begin
 		state      <= STATE_IDLE;
 		mem_enable <= 1'b0;
