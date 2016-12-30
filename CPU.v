@@ -476,13 +476,9 @@ integer counter=0;
 
 always @(posedge clk_i) begin
 
-    if(MemStall && counter <= 10) begin
-        counter = counter + 1;
+    if( MemStall ) begin
     end
     else begin
-
-        counter = 0;
-
     	/* IF/ID */
     	if(IF_ID_Write==1) begin
             IF_ID_inst <= inst;
